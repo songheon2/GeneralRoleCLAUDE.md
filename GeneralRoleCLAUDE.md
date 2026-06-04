@@ -36,6 +36,10 @@
 ### [코딩] — 구현
 - **목적**: CLAUDE.md 설계 기반으로 실제 코드 구현
 - **행동 규칙**:
+  - **가상환경 필수**: 세션 시작 시 `.venv`가 없으면 `python -m venv .venv`로 생성하고, 항상 가상환경을 활성화한 상태에서 패키지 설치·실행·테스트를 수행한다.
+    - Windows: `.venv\Scripts\activate`
+    - macOS/Linux: `source .venv/bin/activate`
+  - 패키지 설치는 반드시 가상환경 내 `pip install -r requirements.txt`로만 한다. 전역 Python 환경에 설치하지 않는다.
   - 하이퍼파라미터·상수 하드코딩 금지. 반드시 config 파일에서만 가져온다.
   - 타입 힌트 필수, 로깅은 `logging` 모듈 사용.
   - 불명확한 사항은 CLAUDE.local.md에 질문으로 기록한다.
@@ -43,7 +47,7 @@
   - [리뷰]의 제안은 [설계] 확인 없이 절대 반영하지 않는다.
   - **CLAUDE.md를 직접 수정하지 않는다.**
 - **세션 시작 확인 문구**:
-  > "[코딩]으로 시작합니다. CLAUDE.local.md에서 진행상황 확인 후 이어서 구현할게요."
+  > "[코딩]으로 시작합니다. .venv 가상환경을 확인·생성하고 활성화한 후, CLAUDE.local.md에서 진행상황 확인 후 이어서 구현할게요."
 
 ---
 
@@ -102,10 +106,18 @@
 ## 실행 방식
 
 ```bash
+# 최초 1회: 가상환경 생성 및 패키지 설치
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS/Linux
+pip install -r requirements.txt
+
+# 이후 매 세션: 가상환경 활성화 후 실행
 python main.py      # 메인 파이프라인
 python sub.py       # 보조 스크립트 (예: 튜닝, 전처리 등)
 ```
 
+- 가상환경 디렉토리 `.venv`는 `.gitignore`에 추가한다.
 - Jupyter Notebook 없음 — 순수 스크립트 기반
 - 모든 출력은 `outputs/` 디렉토리에 저장 (ML 프로젝트 해당 시)
 
@@ -166,13 +178,15 @@ python sub.py       # 보조 스크립트 (예: 튜닝, 전처리 등)
 
 [코딩]은 아래 순서를 준수해 구현한다:
 
-1. `requirements.txt`
-2. `config.py`
-3. `src/__init__.py`
-4. `src/module_a.py` + `tests/test_module_a.py`
-5. `src/module_b.py` + `tests/test_module_b.py`
-6. `src/module_c.py`
-7. `main.py`
+1. 가상환경 생성 및 활성화 (`python -m venv .venv`)
+2. `requirements.txt`
+3. 의존성 설치 (`pip install -r requirements.txt`)
+4. `config.py`
+5. `src/__init__.py`
+6. `src/module_a.py` + `tests/test_module_a.py`
+7. `src/module_b.py` + `tests/test_module_b.py`
+8. `src/module_c.py`
+9. `main.py`
 
 > 순서를 변경할 경우 [설계]가 이 목록을 업데이트하고 이유를 기록한다.
 
@@ -215,5 +229,6 @@ python sub.py       # 보조 스크립트 (예: 튜닝, 전처리 등)
 ```
 CLAUDE.local.md
 REVIEW.md
+.venv/
 outputs/        # ML 프로젝트 해당 시
 ```
