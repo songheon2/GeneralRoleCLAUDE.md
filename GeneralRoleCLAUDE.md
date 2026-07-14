@@ -26,6 +26,7 @@ claude "[설계] CLAUDE.md를 읽고 메인 에이전트(오케스트레이터)�
 - **목적**: 아키텍처 설계 유지, 모듈 간 인터페이스 정의, 구현 규칙 관리, **[코딩]/[리뷰] 서브에이전트 지시**
 - **행동 규칙**:
   - 코드를 직접 작성하지 않는다. 설계·지시·서브에이전트 호출만 한다.
+  - 플레이스홀더 인터뷰 시 `[프로젝트명]` 등 기존 항목뿐 아니라 **가상환경 이름(`[가상환경명]`)과 Python 버전(`[파이썬버전]`)을 반드시 질문**해 `실행 방식` / `구현 순서` 섹션의 플레이스홀더를 채운다. 이 프로젝트는 conda 기반 가상환경을 사용한다.
   - 구현이 필요하면 `Agent` tool로 `coding` 서브에이전트를 호출한다. 지시 내용에는 대상 파일, 참고할 CLAUDE.md 섹션, 완료 기준을 명확히 포함한다.
   - 구현이 끝나면 `Agent` tool로 `review` 서브에이전트를 호출해 검토를 지시한다.
   - 서브에이전트 호출 전후로 `CLAUDE.local.md`(코딩 진행상황) / `REVIEW.md`(리뷰 결과)를 자동으로 읽고, 다음 지시에 반영한다. 사용자에게 파일 내용을 수동으로 전달해 달라고 요청하지 않는다.
@@ -35,7 +36,7 @@ claude "[설계] CLAUDE.md를 읽고 메인 에이전트(오케스트레이터)�
   - CLAUDE.md는 항상 **single source of truth**로 유지하며, 수정 권한은 [설계]에게만 있다.
   - 서브에이전트가 질문(`CLAUDE.local.md`에 기록된 질문 등)을 남기면, 스스로 판단이 어려운 사항은 사용자에게 확인 후 다음 지시에 반영한다.
 - **세션 시작 확인 문구**:
-  > "[설계]로 시작합니다. CLAUDE.md를 읽고 플레이스홀더가 있으면 채울 정보를 질문한 후, 이후 구현·검토는 coding/review 서브에이전트를 호출해 진행할게요."
+  > "[설계]로 시작합니다. CLAUDE.md를 읽고 플레이스홀더(프로젝트명, 가상환경 이름·Python 버전 등)가 있으면 채울 정보를 질문한 후, 이후 구현·검토는 coding/review 서브에이전트를 호출해 진행할게요."
 
 ---
 
@@ -107,18 +108,19 @@ claude "[설계] CLAUDE.md를 읽고 메인 에이전트(오케스트레이터)�
 ## 실행 방식
 
 ```bash
-# 최초 1회: 가상환경 생성 및 패키지 설치
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
+# 최초 1회: conda 가상환경 생성 및 패키지 설치
+conda create -n [가상환경명] python=[파이썬버전] -y
+conda activate [가상환경명]
 pip install -r requirements.txt
 
 # 이후 매 세션: 가상환경 활성화 후 실행
+conda activate [가상환경명]
 python main.py      # 메인 파이프라인
 python sub.py       # 보조 스크립트 (예: 튜닝, 전처리 등)
 ```
 
-- 가상환경 디렉토리 `.venv`는 `.gitignore`에 추가한다.
+- 가상환경 이름(`[가상환경명]`)과 Python 버전(`[파이썬버전]`)은 [설계]가 세션 시작 인터뷰에서 반드시 질문해 채우고, 이 섹션의 플레이스홀더를 실제 값으로 교체한다.
+- conda 환경은 프로젝트 디렉토리 밖(예: `~/.conda/envs`)에 생성되므로 `.venv/` 같은 gitignore 항목이 필요 없다. 단, `environment.yml`을 별도로 관리한다면 커밋 대상에 포함한다.
 - Jupyter Notebook 없음 — 순수 스크립트 기반
 - 모든 출력은 `outputs/` 디렉토리에 저장 (ML 프로젝트 해당 시)
 
@@ -179,7 +181,7 @@ python sub.py       # 보조 스크립트 (예: 튜닝, 전처리 등)
 
 coding 서브에이전트는 아래 순서를 준수해 구현한다 ([설계]가 순서대로 호출·지시):
 
-1. 가상환경 생성 및 활성화 (`python -m venv .venv`)
+1. 가상환경 생성 및 활성화 (`conda create -n [가상환경명] python=[파이썬버전] -y` → `conda activate [가상환경명]`)
 2. `requirements.txt`
 3. 의존성 설치 (`pip install -r requirements.txt`)
 4. `config.py`
@@ -232,8 +234,9 @@ coding 서브에이전트는 아래 순서를 준수해 구현한다 ([설계]�
 ```
 CLAUDE.local.md
 REVIEW.md
-.venv/
 outputs/        # ML 프로젝트 해당 시
 ```
+
+> conda 가상환경은 프로젝트 디렉토리 밖에 생성되므로 gitignore 대상이 아니다. 만약 프로젝트 내부에 conda 환경을 만드는 경우(`conda create -p ./[가상환경명]`)라면 해당 디렉토리를 여기에 추가한다.
 
 > `.claude/agents/coding.md`, `.claude/agents/review.md`는 서브에이전트 정의 파일이므로 **gitignore하지 않고 커밋한다**.

@@ -8,10 +8,8 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 
 ## 행동 규칙
 
-- **가상환경 필수**: 세션(호출) 시작 시 `.venv`가 없으면 `python -m venv .venv`로 생성하고, 항상 가상환경을 활성화한 상태에서 패키지 설치·실행·테스트를 수행한다.
-  - Windows: `.venv\Scripts\activate`
-  - macOS/Linux: `source .venv/bin/activate`
-- 패키지 설치는 반드시 가상환경 내 `pip install -r requirements.txt`로만 한다. 전역 Python 환경에 설치하지 않는다.
+- **가상환경 필수 (conda)**: `CLAUDE.md`에 명시된 가상환경 이름(`[가상환경명]`)을 사용한다. 세션(호출) 시작 시 `conda env list`로 해당 환경이 없으면 `conda create -n [가상환경명] python=[파이썬버전] -y`로 생성하고, 항상 `conda activate [가상환경명]`로 활성화한 상태에서 패키지 설치·실행·테스트를 수행한다.
+- 패키지 설치는 반드시 활성화된 conda 환경 내에서 `pip install -r requirements.txt`(또는 `conda install`)로만 한다. `base` 환경이나 전역 Python 환경에 설치하지 않는다.
 - 하이퍼파라미터·상수 하드코딩 금지. 반드시 `config.py`에서만 가져온다.
 - 타입 힌트 필수, 로깅은 `logging` 모듈 사용.
 - 작업 시작 전 `CLAUDE.md`(설계 명세)와 `CLAUDE.local.md`(이전 진행상황)를 읽고 이어서 작업한다.
